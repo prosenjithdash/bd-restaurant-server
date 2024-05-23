@@ -30,11 +30,27 @@ async function run() {
       // await client.connect();
       
 
-      const menuCollection = client.db('bd-restaurant').collection('menu');
+    const menuCollection = client.db('bd-restaurant').collection('menu');
+    const cartCollection = client.db('bd-restaurant').collection('carts');
 
+
+    // Get all menu items and show display
       app.get('/menu', async (req, res) => {
           const result = await menuCollection.find().toArray()
-          res.send(result);
+          res.send(result)
+      })
+    
+     // Get all specipic added food cart items and show display then update count
+      app.get('/carts', async (req, res) => {
+          const result = await cartCollection.find().toArray()
+          res.send(result)
+      })
+    
+    // Post food cart item and save database on carts
+    app.post('/carts', async (req, res) => {
+      const cartItem = req.body;
+          const result = await cartCollection.insertOne(cartItem)
+          res.send(result)
       })
 
 
@@ -57,3 +73,18 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`BD Restaurant Server is running on port ${port}`)
 })
+
+
+
+/**
+ * ----------------------------
+ *     NAMING CONVENTION
+ * ----------------------------
+ * 
+ * app.get('/users')
+ * app.get('/users/:id')
+ * app.post('/users')
+ * app.put('/users/:id')
+ * app.patch('/users/:id')
+ * app.delete('/users/:id')
+ */
