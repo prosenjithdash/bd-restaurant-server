@@ -40,9 +40,11 @@ async function run() {
           res.send(result)
       })
     
-     // Get all specipic added food cart items and show display then update count
-      app.get('/carts', async (req, res) => {
-          const result = await cartCollection.find().toArray()
+     // Get all specific added food cart items and show display then update count
+    app.get('/carts', async (req, res) => {
+      const email = req.query.email;
+      const query = {email: email}
+          const result = await cartCollection.find(query).toArray()
           res.send(result)
       })
     
