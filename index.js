@@ -48,6 +48,13 @@ async function run() {
           const result = await cartCollection.find(query).toArray()
           res.send(result)
     })
+
+    // Admin Part
+    // Get all users and show display
+      app.get('/users', async (req, res) => {
+          const result = await userCollection.find().toArray()
+          res.send(result)
+      })
     
      // Post user and save database on users
     app.post('/users', async (req, res) => {
