@@ -31,6 +31,7 @@ async function run() {
       
 
     const menuCollection = client.db('bd-restaurant').collection('menu');
+    const userCollection = client.db('bd-restaurant').collection('users');
     const cartCollection = client.db('bd-restaurant').collection('carts');
 
 
@@ -46,7 +47,24 @@ async function run() {
       const query = {email: email}
           const result = await cartCollection.find(query).toArray()
           res.send(result)
-      })
+    })
+    
+     // Post user and save database on users
+    app.post('/users', async (req, res) => {
+       const user = req.body;
+      // insert email if user does not exists:
+      // you can do this many way (1. email uniq 2. upsert 3. simple checking)
+
+      const query = { email: user.email }
+      const existingUser = await userCollection.findOne(query)
+      if (existingUser) {
+        return res.send({ message: 'User already exists', insertedId: null })
+      }
+     
+          const result = await userCollection.insertOne(user)
+          res.send(result)
+    })
+    
     
     // Post food cart item and save database on carts
     app.post('/carts', async (req, res) => {
