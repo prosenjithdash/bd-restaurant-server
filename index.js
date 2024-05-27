@@ -146,6 +146,13 @@ async function run() {
           res.send(result)
     })
 
+    // Post menu  item and save database on menu
+    app.post('/menu', verifyToken,verifyAdmin, async (req, res) => {
+      const menuItem = req.body;
+          const result = await menuCollection.insertOne(menuItem)
+          res.send(result)
+    })
+
     // Patch user for make admin on database 
     app.patch('/users/admin/:id',verifyToken,verifyAdmin, async (req, res) => {
           const id = req.params.id;
