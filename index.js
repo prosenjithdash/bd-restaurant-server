@@ -4,9 +4,11 @@ require('dotenv').config()
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 var jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
 const port = process.env.PORT || 8000;
 
-
+// STRIPE_SECRET_KEY
 
 // Middleware
 app.use(cors())
@@ -45,9 +47,16 @@ async function run() {
 
     // Get all menu items and show display
       app.get('/menu', async (req, res) => {
-          const result = await menuCollection.find().toArray()
+        const result = await menuCollection.find().toArray();
           res.send(result)
       })
+    // UpdateMenu food  item and update database on menu item
+    app.get('/menu/:id', async (req, res) => {
+          const id = req.params.id;
+          const query ={_id: new ObjectId(id)}
+          const result = await menuCollection.findOne(query)
+          res.send(result)
+    })
     
      // Get all specific added food cart items and show display then update count
     app.get('/carts', async (req, res) => {
@@ -153,6 +162,27 @@ async function run() {
           res.send(result)
     })
 
+
+    // Payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+
+      const amount = parseInt(price * 100)
+
+      // Create a PaymentIntent with the order amount and currency
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ['card']
+        
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+
     // Patch user for make admin on database 
     app.patch('/users/admin/:id',verifyToken,verifyAdmin, async (req, res) => {
           const id = req.params.id;
@@ -180,7 +210,15 @@ async function run() {
           const query ={_id: new ObjectId(id)}
           const result = await userCollection.deleteOne(query)
           res.send(result)
-      })
+    })
+    
+      // Delete menu item and delete database on menu
+    app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
+          const id = req.params.id;
+          const query ={_id: new ObjectId(id)}
+          const result = await menuCollection.deleteOne(query)
+          res.send(result)
+    })
 
 
     
