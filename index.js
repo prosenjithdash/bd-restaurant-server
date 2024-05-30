@@ -35,6 +35,7 @@ async function run() {
     const menuCollection = client.db('bd-restaurant').collection('menu');
     const userCollection = client.db('bd-restaurant').collection('users');
     const cartCollection = client.db('bd-restaurant').collection('carts');
+    const paymentCollection = client.db('bd-restaurant').collection('payments');
 
     // jwt related api
     app.post('/jwt', async (req, res) => {
@@ -178,9 +179,64 @@ async function run() {
       });
 
       res.send({
-        clientSecret: paymentIntent.client_secret,
+        clientSecret: paymentIntent.client_secret
       });
     });
+
+    // payment api
+    app.post('/payment', async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment)
+      // carefully delete each item from the cart
+      console.log('payment info', payment);
+      const query = {
+        _id: {
+          $in: payment.cartIds.map(id => new ObjectId(id))
+        }
+      };
+
+      const deleteResult = await cartCollection.deleteMany(query)
+      res.send({paymentResult, deleteResult})
+    })
+
+    // get payment history  
+    app.get('/payments/:email',verifyToken, async (req, res) => {
+      const query = { email: req.params.email } 
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    // stats or analytics
+    app.get('/admin-stats', verifyToken,verifyAdmin, async (req, res) => {
+      const users = await userCollection.estimatedDocumentCount();
+      const menuItems = await menuCollection.estimatedDocumentCount();
+      const orders = await paymentCollection.estimatedDocumentCount();
+
+      const result = await paymentCollection.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalRevenue: {
+              $sum: '$price'
+            }
+            
+          }
+        }
+      ]).toArray();
+
+      const revenue = result.length > 0 ? result[0].totalRevenue : 0;
+
+
+      res.send({
+        users,
+        menuItems,
+        orders,
+        revenue
+      })
+    })
 
 
     // Patch user for make admin on database 
