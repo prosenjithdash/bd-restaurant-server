@@ -210,7 +210,7 @@ async function run() {
     })
 
     // stats or analytics
-    app.get('/admin-stats', verifyToken,verifyAdmin, async (req, res) => {
+    app.get('/admin-stats', verifyToken,verifyAdmin, async(req, res) => {
       const users = await userCollection.estimatedDocumentCount();
       const menuItems = await menuCollection.estimatedDocumentCount();
       const orders = await paymentCollection.estimatedDocumentCount();
